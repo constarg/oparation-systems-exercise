@@ -42,10 +42,6 @@ static inline void change_number(int x)
     number += x;
 }
 
-/**
-    Σε αυτή την συνάρτηση εμφανήζουμε τα
-    attributes ενός thread.
-*/
 static void print_thread_attr(pthread_t thread,
                               const char *name, int wait_time)
 {
@@ -112,17 +108,10 @@ static void print_thread_attr(pthread_t thread,
     printf("Stack address       = %p\n", stack_addr);
     printf("Stack size          = %#zx bytes\n\n", stack_size);
 
-
-    // Απελευθερόνουμε την δεσμευμένη μνήμη των attributes.
     pthread_attr_destroy(&thread_attr_t);
     printf("Number value after thread call: %d\n", number);
 }
 
-/**
-    Αυτή η συνάρτηση εκτελεί ολη την διαδικασία
-    που πρέπει να εκτελέσει καθένα απο τα δύο
-    threads.
-*/
 static void *thread_run(void *thread_info)
 {
     clock_t thread_start_time = clock();
@@ -144,36 +133,26 @@ static void *thread_run(void *thread_info)
         else
             change_number(thread_run_info->what_to_exec);
 
-        // Βρίσκουμε τον χρόνο που έχει περάσει ( σε δευτερόλεπτα ).
         curr_run_time = time_spend / CLOCKS_PER_SEC;
     } while (curr_run_time < thread_run_info->time_to_run);
 
     print_thread_attr(pthread_self(), thread_run_info->name, thread_run_info->time_to_run);
 }
 
-/**
-    Σε αυτή την συνάρτηση εκτελούμε
-    την ολη διαδικασία που θα πρέπει
-    να εκτελέσει η διεργασία "παιδί."
-*/
 static void child_process_exec(void)
 {
-    // Τα threads της θυγατρικής διεργασίας.
     pthread_t minus_t;
     pthread_t increase_t;
     pthread_attr_t minus_attr_t;
     pthread_attr_t increase_attr_t;
 
-    // Αρχικοποιουμε τα attributes των thread.
     if (pthread_attr_init(&minus_attr_t) != 0) ERROR()
     if (pthread_attr_init(&increase_attr_t) != 0) ERROR()
 
-    // Οι χρονοι που θα πρέπει να τρέξουν.
     srand(time(NULL));
     int minus_t_rand = 1 + rand() % (10 + 1 - 1);
     int increase_t_rand = 1 + rand() % (10 + 1 - 1);
 
-    // Δίνουμε τιμες στο struct που περιεχει τις απαραιτητες πληροφοριες.
     struct thread_run_info minus_t_run_info;
     memcpy(&minus_t_run_info.time_to_run, &minus_t_rand, sizeof(int));
     minus_t_run_info.what_to_exec = 0;
@@ -186,7 +165,6 @@ static void child_process_exec(void)
     increase_t_run_info.is_exec_random = FALSE;
     strcpy(increase_t_run_info.name, "increase");
 
-    // Δημιουργούμε τα threads.
     if (pthread_create(&minus_t, &minus_attr_t, &thread_run,
                        (void *)&minus_t_run_info) != 0) FAILED_TO_CREATE_THREAD("minus")
     if (pthread_create(&increase_t, &increase_attr_t, &thread_run,
